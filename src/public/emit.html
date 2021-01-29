@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MICROPHONE</title>
+</head>
+<body>
+    <audio controls>
+        No te funciona el micro!
+    </audio>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.1.0/socket.io.js" integrity="sha512-+l9L4lMTFNy3dEglQpprf7jQBhQsQ3/WvOnjaN/+/L4i0jOstgScV0q2TjfvRF4V+ZePMDuZYIQtg5T4MKr+MQ==" crossorigin="anonymous"></script>
+    <script>
+        let socket = io.connect('http://localhost:666/');
+
+        socket.on('stream', (body) => {
+            console.log('body')
+        })
+
+        console.log(navigator)
+        navigator.mediaDevices.getUserMedia({audio : true}).then((mediaStream) => {
+            console.log(mediaStream)
+
+            let mediaRecorder = new MediaRecorder(mediaStream)
+            mediaRecorder.onstart = (e) => {
+                this.chunks = [];
+            }
+
+            mediaRecorder.ondataavailable = (e) => {
+                this.chunks.push(e.data)
+            }
+
+            mediaRecorder.onstop = (e) => {
+                let blob = new Blob(this.chunks,{'type' : 'audio/ogg'});
+                socket.emit('stream',blob)
+            }
+
+            mediaRecorder.start();
+
+            setInterval(() => {
+                mediaRecorder.stop();
+                mediaRecorder.start(Math.round(Math.random) * 3000);
+            },500)
+
+        })
+
+    </script>
+</body>
+</html>
